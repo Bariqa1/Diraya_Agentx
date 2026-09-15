@@ -1,4 +1,3 @@
-"""Simple LangGraph orchestration, with per-stream cache carried between frames."""
 from copy import deepcopy
 import logging
 import math
@@ -22,6 +21,7 @@ class ContextState(TypedDict, total=False):
     cache_timestamp: float | None
     retry_after: float | None
     gemini_called: bool
+    force_vlm: bool
     route: str
     errors: list[str]
     status: str
@@ -29,12 +29,6 @@ class ContextState(TypedDict, total=False):
 
 
 class ContextAgent:
-    """One instance per sequential video stream; timestamps are seconds.
-
-    Saved video: frame_index / fps. Live input: elapsed time.monotonic().
-    Call reset_cache() before another stream or deliberate scene invalidation.
-    """
-
     def __init__(self, ppe_detector, context_tool, zone_monitor, cache_ttl=30,
                  failure_cooldown=5, log_interval=1):
         self.ppe_detector, self.context_tool, self.zone_monitor = ppe_detector, context_tool, zone_monitor
@@ -61,6 +55,8 @@ class ContextAgent:
         self._memory = dict(cached_context=None, cache_timestamp=None, retry_after=None)
         self._last_timestamp = None
         self._last_log = -math.inf
+        self._was_in_violation = False
+        self._pending_force_vlm = False
 
     def _ppe(self, state):
         try:
@@ -80,17 +76,27 @@ class ContextAgent:
         valid = (state["cached_context"] is not None and state["cache_timestamp"] is not None
                  and state["timestamp"] - state["cache_timestamp"] < self.cache_ttl)
         cooling = state["retry_after"] is not None and state["timestamp"] < state["retry_after"]
-        if not valid and not cooling:
-            LOG.info("[%s] %s -> calling Gemini", self._stamp(state["timestamp"]),
-                     "No VLM cache" if state["cached_context"] is None else "VLM cache expired")
-        return {"route": "cache" if valid or cooling else "vlm"}
+        force = state.get("force_vlm", False)
+        if cooling:
+            return {"route": "cache"}
+        if force or not valid:
+            reason = ("VLM forced by zone violation" if force else
+                      ("No VLM cache" if state["cached_context"] is None else "VLM cache expired"))
+            LOG.info("[%s] %s -> calling Gemini", self._stamp(state["timestamp"]), reason)
+            return {"route": "vlm"}
+        return {"route": "cache"}
 
     def _cached(self, state):
-        failed = state["retry_after"] is not None
+        failed = state["retry_after"] is not None and state["timestamp"] < state["retry_after"]
         context = deepcopy(state["cached_context"]) if state["cached_context"] is not None else unknown_context()
-        source = ("cache_after_vlm_failure" if failed else "cache") if state["cached_context"] is not None else "unavailable"
-        return {"context": {**context, "source": source},
-                "errors": state["errors"] + (["gemini:failure_cooldown"] if failed else [])}
+        if state["cached_context"] is None:
+            source = "unavailable"
+        elif failed:
+            source = "cache_after_vlm_failure"
+        else:
+            source = "cache"
+        errors = state["errors"] + (["gemini:failure_cooldown"] if failed else [])
+        return {"context": {**context, "source": source}, "errors": errors}
 
     def _gemini(self, state):
         try:
@@ -136,13 +142,38 @@ class ContextAgent:
             raise ValueError("Expected a non-empty BGR OpenCV frame")
         if self._last_timestamp is not None and timestamp < self._last_timestamp:
             self.reset_cache()
-        state = self.graph.invoke({**deepcopy(self._memory), "frame": frame, "timestamp": timestamp,
-                                   "errors": [], "gemini_called": False})
+
+        cooling = (self._memory["retry_after"] is not None
+                   and timestamp < self._memory["retry_after"])
+        force_vlm = self._pending_force_vlm and not cooling
+        if force_vlm:
+            self._pending_force_vlm = False
+        was_in_violation = self._was_in_violation
+
+        state = self.graph.invoke({
+            **deepcopy(self._memory),
+            "frame": frame,
+            "timestamp": timestamp,
+            "errors": [],
+            "gemini_called": False,
+            "force_vlm": force_vlm,
+        })
         self._memory = {key: deepcopy(state[key]) for key in self._memory}
         self._last_timestamp = timestamp
+
+        current_violation = bool(state.get("zone", {}).get("violation"))
+        if not current_violation:
+            self._pending_force_vlm = False
+        elif not was_in_violation:
+            LOG.info("[%s] Zone violation STARTED - forcing VLM refresh next frame",
+                     self._stamp(timestamp))
+            self._pending_force_vlm = True
+        self._was_in_violation = current_violation
+
         if timestamp - self._last_log >= self.log_interval:
             LOG.info("[%s] PPE %s; context=%s; zone=%s; status=%s", self._stamp(timestamp),
                      "failed" if any(e.startswith("ppe:") for e in state["errors"]) else "detection complete",
                      state["context"]["source"], state["zone"]["violation"], state["status"])
             self._last_log = timestamp
+
         return state["observation"]
