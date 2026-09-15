@@ -1,0 +1,7 @@
+ultralytics>=8.4,<9
+torch>=2,<3
+opencv-python>=4.10,<5
+google-genai>=1.56,<2
+langgraph>=1.0,<2
+python-dotenv>=1.0,<2
+numpy>=1.26,<3
