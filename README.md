@@ -1,13 +1,13 @@
 # Derayah Context Agent
 
-An observation-only hackathon MVP: custom PPE YOLO + Gemini visual context + a
+A hackathon MVP: custom PPE YOLO + Gemini visual context + a
 separate person YOLO and polygon membership check, orchestrated by LangGraph.
-No compliance, policy retrieval, risk scoring, or alerts are implemented.
+No compliance, policy retrieval, risk scoring, or alerts are implemented yet.
 
 ## Project files
 
 ```text
-Diraya_دراية/
+Diraya/
 config.py                     # Environment parsing and validation
 main.py                       # Video pipeline and overlays
 agents/
