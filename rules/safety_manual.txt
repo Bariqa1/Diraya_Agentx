@@ -1,0 +1,39 @@
+Task: welding
+Required PPE: Face Shield, Gloves, Coverall
+Recommended PPE: Safety Shoes, Ear Protectors
+
+Task: grinding
+Required PPE: Safety Glasses, Gloves, Face Shield
+Recommended PPE: Ear Protectors, Safety Shoes
+
+Task: working_at_height
+Required PPE: Safety Harness, Helmet
+Recommended PPE: Safety Shoes, Safety Vest
+
+Task: operating_machinery
+Required PPE: Helmet, Safety Vest
+Recommended PPE: Safety Shoes, Ear Protectors
+
+Task: walking_in_yard
+Required PPE: Helmet
+Recommended PPE: Safety Vest, Safety Shoes
+
+Task: entering_restricted_area
+Required PPE: Helmet, Safety Vest
+Recommended PPE: Safety Shoes, Safety Glasses
+
+Task: woodworking
+Required PPE: Safety Glasses
+Recommended PPE: Ear Protectors, Mask
+
+Task: electronics
+Required PPE: Safety Glasses
+Recommended PPE: Gloves
+
+Task: pipe_fitting
+Required PPE: Helmet, Gloves, Safety Glasses
+Recommended PPE: Safety Shoes, Coverall
+
+Task: electrical_maintenance
+Required PPE: Safety Glasses, Gloves, Helmet
+Recommended PPE: Safety Shoes, Coverall, Ear Protectors

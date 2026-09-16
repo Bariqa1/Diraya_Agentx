@@ -1,0 +1,403 @@
+[
+  {
+    "id": "CASE-01",
+    "name": "Welding: fully compliant",
+    "observation": {
+      "context": {
+        "task": "welding",
+        "confidence": 0.95,
+        "source": "gemini"
+      },
+      "zone": {
+        "violation": false
+      },
+      "ppe": {
+        "detections": [
+          {
+            "class": "Face Shield",
+            "confidence": 0.92
+          },
+          {
+            "class": "Gloves",
+            "confidence": 0.88
+          },
+          {
+            "class": "Coverall",
+            "confidence": 0.94
+          },
+          {
+            "class": "Safety Shoes",
+            "confidence": 0.85
+          },
+          {
+            "class": "Ear Protectors",
+            "confidence": 0.82
+          }
+        ]
+      }
+    },
+    "expected": {
+      "severity": "SAFE",
+      "alert": false,
+      "escalation": "none",
+      "missing_critical_ppe": []
+    }
+  },
+  {
+    "id": "CASE-02",
+    "name": "Welding: missing critical Face Shield",
+    "observation": {
+      "context": {
+        "task": "welding",
+        "confidence": 0.95,
+        "source": "gemini"
+      },
+      "zone": {
+        "violation": false
+      },
+      "ppe": {
+        "detections": [
+          {
+            "class": "No Face Shield",
+            "confidence": 0.89
+          },
+          {
+            "class": "Gloves",
+            "confidence": 0.88
+          },
+          {
+            "class": "Coverall",
+            "confidence": 0.94
+          }
+        ]
+      }
+    },
+    "expected": {
+      "severity": "CRITICAL",
+      "alert": true,
+      "escalation": "safety_officer",
+      "missing_critical_ppe": [
+        "Face Shield"
+      ]
+    }
+  },
+  {
+    "id": "CASE-03",
+    "name": "Welding: missing recommended Ear Protectors only",
+    "observation": {
+      "context": {
+        "task": "welding",
+        "confidence": 0.95,
+        "source": "gemini"
+      },
+      "zone": {
+        "violation": false
+      },
+      "ppe": {
+        "detections": [
+          {
+            "class": "Face Shield",
+            "confidence": 0.92
+          },
+          {
+            "class": "Gloves",
+            "confidence": 0.88
+          },
+          {
+            "class": "Coverall",
+            "confidence": 0.94
+          },
+          {
+            "class": "No Ear Protectors",
+            "confidence": 0.78
+          }
+        ]
+      }
+    },
+    "expected": {
+      "severity": "WARNING",
+      "alert": true,
+      "escalation": "supervisor",
+      "missing_recommended_ppe": [
+        "Ear Protectors"
+      ]
+    }
+  },
+  {
+    "id": "CASE-04",
+    "name": "Working at height: missing Safety Harness",
+    "observation": {
+      "context": {
+        "task": "working_at_height",
+        "confidence": 0.9,
+        "source": "gemini"
+      },
+      "zone": {
+        "violation": false
+      },
+      "ppe": {
+        "detections": [
+          {
+            "class": "Helmet",
+            "confidence": 0.91
+          },
+          {
+            "class": "No Safety Harness",
+            "confidence": 0.87
+          }
+        ]
+      }
+    },
+    "expected": {
+      "severity": "CRITICAL",
+      "alert": true,
+      "escalation": "safety_officer",
+      "missing_critical_ppe": [
+        "Safety Harness"
+      ]
+    }
+  },
+  {
+    "id": "CASE-05",
+    "name": "Working at height: missing Helmet & Harness",
+    "observation": {
+      "context": {
+        "task": "working_at_height",
+        "confidence": 0.92,
+        "source": "gemini"
+      },
+      "zone": {
+        "violation": false
+      },
+      "ppe": {
+        "detections": [
+          {
+            "class": "No Helmet",
+            "confidence": 0.9
+          },
+          {
+            "class": "No Safety Harness",
+            "confidence": 0.85
+          }
+        ]
+      }
+    },
+    "expected": {
+      "severity": "CRITICAL",
+      "alert": true,
+      "escalation": "safety_officer",
+      "missing_critical_ppe": [
+        "Helmet",
+        "Safety Harness"
+      ]
+    }
+  },
+  {
+    "id": "CASE-06",
+    "name": "Restricted zone breach while compliant with PPE",
+    "observation": {
+      "context": {
+        "task": "walking_in_yard",
+        "confidence": 0.88,
+        "source": "gemini"
+      },
+      "zone": {
+        "violation": true
+      },
+      "ppe": {
+        "detections": [
+          {
+            "class": "Helmet",
+            "confidence": 0.95
+          }
+        ]
+      }
+    },
+    "expected": {
+      "severity": "CRITICAL",
+      "alert": true,
+      "escalation": "emergency",
+      "zone_violation": true
+    }
+  },
+  {
+    "id": "CASE-07",
+    "name": "Restricted zone breach AND missing PPE",
+    "observation": {
+      "context": {
+        "task": "entering_restricted_area",
+        "confidence": 0.91,
+        "source": "gemini"
+      },
+      "zone": {
+        "violation": true
+      },
+      "ppe": {
+        "detections": [
+          {
+            "class": "No Helmet",
+            "confidence": 0.85
+          },
+          {
+            "class": "No Safety Vest",
+            "confidence": 0.88
+          }
+        ]
+      }
+    },
+    "expected": {
+      "severity": "CRITICAL",
+      "alert": true,
+      "escalation": "emergency",
+      "zone_violation": true
+    }
+  },
+  {
+    "id": "CASE-08",
+    "name": "Grinding: fully compliant",
+    "observation": {
+      "context": {
+        "task": "grinding",
+        "confidence": 0.89,
+        "source": "gemini"
+      },
+      "zone": {
+        "violation": false
+      },
+      "ppe": {
+        "detections": [
+          {
+            "class": "Safety Glasses",
+            "confidence": 0.92
+          },
+          {
+            "class": "Gloves",
+            "confidence": 0.9
+          },
+          {
+            "class": "Face Shield",
+            "confidence": 0.88
+          }
+        ]
+      }
+    },
+    "expected": {
+      "severity": "SAFE",
+      "alert": false,
+      "escalation": "none"
+    }
+  },
+  {
+    "id": "CASE-09",
+    "name": "Grinding: missing Safety Glasses & Face Shield",
+    "observation": {
+      "context": {
+        "task": "grinding",
+        "confidence": 0.89,
+        "source": "gemini"
+      },
+      "zone": {
+        "violation": false
+      },
+      "ppe": {
+        "detections": [
+          {
+            "class": "No Safety Glasses",
+            "confidence": 0.84
+          },
+          {
+            "class": "No Face Shield",
+            "confidence": 0.86
+          },
+          {
+            "class": "Gloves",
+            "confidence": 0.9
+          }
+        ]
+      }
+    },
+    "expected": {
+      "severity": "CRITICAL",
+      "alert": true,
+      "escalation": "safety_officer"
+    }
+  },
+  {
+    "id": "CASE-10",
+    "name": "Unknown task: conservative fallback triggers warning",
+    "observation": {
+      "context": {
+        "task": "unrecognized_activity_xyz",
+        "confidence": 0.7,
+        "source": "gemini"
+      },
+      "zone": {
+        "violation": false
+      },
+      "ppe": {
+        "detections": []
+      }
+    },
+    "expected": {
+      "severity": "WARNING",
+      "alert": true,
+      "unknown_task": true,
+      "escalation": "supervisor"
+    }
+  },
+  {
+    "id": "CASE-11",
+    "name": "Low confidence task recognition (< 0.5)",
+    "observation": {
+      "context": {
+        "task": "walking_in_yard",
+        "confidence": 0.35,
+        "source": "gemini"
+      },
+      "zone": {
+        "violation": false
+      },
+      "ppe": {
+        "detections": [
+          {
+            "class": "Helmet",
+            "confidence": 0.9
+          }
+        ]
+      }
+    },
+    "expected": {
+      "severity": "WARNING",
+      "alert": true,
+      "low_confidence": true,
+      "escalation": "supervisor"
+    }
+  },
+  {
+    "id": "CASE-12",
+    "name": "Electronics maintenance: missing Safety Glasses",
+    "observation": {
+      "context": {
+        "task": "electronics",
+        "confidence": 0.92,
+        "source": "gemini"
+      },
+      "zone": {
+        "violation": false
+      },
+      "ppe": {
+        "detections": [
+          {
+            "class": "No Safety Glasses",
+            "confidence": 0.87
+          }
+        ]
+      }
+    },
+    "expected": {
+      "severity": "CRITICAL",
+      "alert": true,
+      "escalation": "safety_officer"
+    }
+  }
+]

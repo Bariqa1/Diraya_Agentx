@@ -1,0 +1,166 @@
+{
+  "tasks": {
+    "welding": {
+      "critical_ppe": [
+        "Face Shield",
+        "Gloves",
+        "Coverall"
+      ],
+      "recommended_ppe": [
+        "Safety Shoes",
+        "Ear Protectors"
+      ],
+      "citation": "Task: welding\nRequired PPE: Face Shield, Gloves, Coverall\nRecommended PPE: Safety Shoes, Ear Protectors",
+      "source": "structured_parser",
+      "confidence": 1.0,
+      "requires_manual_review": false,
+      "approved_by": "system_parser",
+      "approved_at": 1789590001.0826828
+    },
+    "grinding": {
+      "critical_ppe": [
+        "Safety Glasses",
+        "Gloves",
+        "Face Shield"
+      ],
+      "recommended_ppe": [
+        "Ear Protectors",
+        "Safety Shoes"
+      ],
+      "citation": "Task: grinding\nRequired PPE: Safety Glasses, Gloves, Face Shield\nRecommended PPE: Ear Protectors, Safety Shoes",
+      "source": "structured_parser",
+      "confidence": 1.0,
+      "requires_manual_review": false,
+      "approved_by": "system_parser",
+      "approved_at": 1789590001.082688
+    },
+    "working_at_height": {
+      "critical_ppe": [
+        "Safety Harness",
+        "Helmet"
+      ],
+      "recommended_ppe": [
+        "Safety Shoes",
+        "Safety Vest"
+      ],
+      "citation": "Task: working_at_height\nRequired PPE: Safety Harness, Helmet\nRecommended PPE: Safety Shoes, Safety Vest",
+      "source": "structured_parser",
+      "confidence": 1.0,
+      "requires_manual_review": false,
+      "approved_by": "system_parser",
+      "approved_at": 1789590001.082691
+    },
+    "operating_machinery": {
+      "critical_ppe": [
+        "Helmet",
+        "Safety Vest"
+      ],
+      "recommended_ppe": [
+        "Safety Shoes",
+        "Ear Protectors"
+      ],
+      "citation": "Task: operating_machinery\nRequired PPE: Helmet, Safety Vest\nRecommended PPE: Safety Shoes, Ear Protectors",
+      "source": "structured_parser",
+      "confidence": 1.0,
+      "requires_manual_review": false,
+      "approved_by": "system_parser",
+      "approved_at": 1789590001.0826938
+    },
+    "walking_in_yard": {
+      "critical_ppe": [
+        "Helmet"
+      ],
+      "recommended_ppe": [
+        "Safety Vest",
+        "Safety Shoes"
+      ],
+      "citation": "Task: walking_in_yard\nRequired PPE: Helmet\nRecommended PPE: Safety Vest, Safety Shoes",
+      "source": "structured_parser",
+      "confidence": 1.0,
+      "requires_manual_review": false,
+      "approved_by": "system_parser",
+      "approved_at": 1789590001.082696
+    },
+    "entering_restricted_area": {
+      "critical_ppe": [
+        "Helmet",
+        "Safety Vest"
+      ],
+      "recommended_ppe": [
+        "Safety Shoes",
+        "Safety Glasses"
+      ],
+      "citation": "Task: entering_restricted_area\nRequired PPE: Helmet, Safety Vest\nRecommended PPE: Safety Shoes, Safety Glasses",
+      "source": "structured_parser",
+      "confidence": 1.0,
+      "requires_manual_review": false,
+      "approved_by": "system_parser",
+      "approved_at": 1789590001.082699
+    },
+    "woodworking": {
+      "critical_ppe": [
+        "Safety Glasses"
+      ],
+      "recommended_ppe": [
+        "Ear Protectors",
+        "Mask"
+      ],
+      "citation": "Task: woodworking\nRequired PPE: Safety Glasses\nRecommended PPE: Ear Protectors, Mask",
+      "source": "structured_parser",
+      "confidence": 1.0,
+      "requires_manual_review": false,
+      "approved_by": "system_parser",
+      "approved_at": 1789590001.082701
+    },
+    "electronics": {
+      "critical_ppe": [
+        "Safety Glasses"
+      ],
+      "recommended_ppe": [
+        "Gloves"
+      ],
+      "citation": "Task: electronics\nRequired PPE: Safety Glasses\nRecommended PPE: Gloves",
+      "source": "structured_parser",
+      "confidence": 1.0,
+      "requires_manual_review": false,
+      "approved_by": "system_parser",
+      "approved_at": 1789590001.082703
+    },
+    "pipe_fitting": {
+      "critical_ppe": [
+        "Helmet",
+        "Gloves",
+        "Safety Glasses"
+      ],
+      "recommended_ppe": [
+        "Safety Shoes",
+        "Coverall"
+      ],
+      "citation": "Task: pipe_fitting\nRequired PPE: Helmet, Gloves, Safety Glasses\nRecommended PPE: Safety Shoes, Coverall",
+      "source": "structured_parser",
+      "confidence": 1.0,
+      "requires_manual_review": false,
+      "approved_by": "system_parser",
+      "approved_at": 1789590001.0827048
+    },
+    "electrical_maintenance": {
+      "critical_ppe": [
+        "Safety Glasses",
+        "Gloves",
+        "Helmet"
+      ],
+      "recommended_ppe": [
+        "Safety Shoes",
+        "Coverall",
+        "Ear Protectors"
+      ],
+      "citation": "Task: electrical_maintenance\nRequired PPE: Safety Glasses, Gloves, Helmet\nRecommended PPE: Safety Shoes, Coverall, Ear Protectors",
+      "source": "structured_parser",
+      "confidence": 1.0,
+      "requires_manual_review": false,
+      "approved_by": "system_parser",
+      "approved_at": 1789590001.082708
+    }
+  },
+  "aliases": {}
+}

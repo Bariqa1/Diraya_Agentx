@@ -1,0 +1,188 @@
+{
+  "summary": {
+    "total_scenarios": 12,
+    "critical_hazards_total": 7,
+    "critical_hazards_detected": 7,
+    "critical_false_negatives": 0,
+    "critical_recall_pct": 100.0,
+    "severity_accuracy_pct": 100.0,
+    "alert_accuracy_pct": 100.0,
+    "escalation_accuracy_pct": 100.0,
+    "avg_latency_ms": 0.026
+  },
+  "results": [
+    {
+      "id": "CASE-01",
+      "name": "Welding: fully compliant",
+      "passed": true,
+      "expected_severity": "SAFE",
+      "actual_severity": "SAFE",
+      "expected_alert": false,
+      "actual_alert": false,
+      "expected_escalation": "none",
+      "actual_escalation": "none",
+      "missing_ppe": [],
+      "latency_ms": 0.086
+    },
+    {
+      "id": "CASE-02",
+      "name": "Welding: missing critical Face Shield",
+      "passed": true,
+      "expected_severity": "CRITICAL",
+      "actual_severity": "CRITICAL",
+      "expected_alert": true,
+      "actual_alert": true,
+      "expected_escalation": "safety_officer",
+      "actual_escalation": "safety_officer",
+      "missing_ppe": [
+        "Face Shield"
+      ],
+      "latency_ms": 0.026
+    },
+    {
+      "id": "CASE-03",
+      "name": "Welding: missing recommended Ear Protectors only",
+      "passed": true,
+      "expected_severity": "WARNING",
+      "actual_severity": "WARNING",
+      "expected_alert": true,
+      "actual_alert": true,
+      "expected_escalation": "supervisor",
+      "actual_escalation": "supervisor",
+      "missing_ppe": [
+        "Ear Protectors"
+      ],
+      "latency_ms": 0.053
+    },
+    {
+      "id": "CASE-04",
+      "name": "Working at height: missing Safety Harness",
+      "passed": true,
+      "expected_severity": "CRITICAL",
+      "actual_severity": "CRITICAL",
+      "expected_alert": true,
+      "actual_alert": true,
+      "expected_escalation": "safety_officer",
+      "actual_escalation": "safety_officer",
+      "missing_ppe": [
+        "Safety Harness"
+      ],
+      "latency_ms": 0.016
+    },
+    {
+      "id": "CASE-05",
+      "name": "Working at height: missing Helmet & Harness",
+      "passed": true,
+      "expected_severity": "CRITICAL",
+      "actual_severity": "CRITICAL",
+      "expected_alert": true,
+      "actual_alert": true,
+      "expected_escalation": "safety_officer",
+      "actual_escalation": "safety_officer",
+      "missing_ppe": [
+        "Helmet",
+        "Safety Harness"
+      ],
+      "latency_ms": 0.014
+    },
+    {
+      "id": "CASE-06",
+      "name": "Restricted zone breach while compliant with PPE",
+      "passed": true,
+      "expected_severity": "CRITICAL",
+      "actual_severity": "CRITICAL",
+      "expected_alert": true,
+      "actual_alert": true,
+      "expected_escalation": "emergency",
+      "actual_escalation": "emergency",
+      "missing_ppe": [],
+      "latency_ms": 0.012
+    },
+    {
+      "id": "CASE-07",
+      "name": "Restricted zone breach AND missing PPE",
+      "passed": true,
+      "expected_severity": "CRITICAL",
+      "actual_severity": "CRITICAL",
+      "expected_alert": true,
+      "actual_alert": true,
+      "expected_escalation": "emergency",
+      "actual_escalation": "emergency",
+      "missing_ppe": [
+        "Helmet",
+        "Safety Vest"
+      ],
+      "latency_ms": 0.011
+    },
+    {
+      "id": "CASE-08",
+      "name": "Grinding: fully compliant",
+      "passed": true,
+      "expected_severity": "SAFE",
+      "actual_severity": "SAFE",
+      "expected_alert": false,
+      "actual_alert": false,
+      "expected_escalation": "none",
+      "actual_escalation": "none",
+      "missing_ppe": [],
+      "latency_ms": 0.013
+    },
+    {
+      "id": "CASE-09",
+      "name": "Grinding: missing Safety Glasses & Face Shield",
+      "passed": true,
+      "expected_severity": "CRITICAL",
+      "actual_severity": "CRITICAL",
+      "expected_alert": true,
+      "actual_alert": true,
+      "expected_escalation": "safety_officer",
+      "actual_escalation": "safety_officer",
+      "missing_ppe": [
+        "Face Shield",
+        "Safety Glasses"
+      ],
+      "latency_ms": 0.011
+    },
+    {
+      "id": "CASE-10",
+      "name": "Unknown task: conservative fallback triggers warning",
+      "passed": true,
+      "expected_severity": "WARNING",
+      "actual_severity": "WARNING",
+      "expected_alert": true,
+      "actual_alert": true,
+      "expected_escalation": "supervisor",
+      "actual_escalation": "supervisor",
+      "missing_ppe": [],
+      "latency_ms": 0.043
+    },
+    {
+      "id": "CASE-11",
+      "name": "Low confidence task recognition (< 0.5)",
+      "passed": true,
+      "expected_severity": "WARNING",
+      "actual_severity": "WARNING",
+      "expected_alert": true,
+      "actual_alert": true,
+      "expected_escalation": "supervisor",
+      "actual_escalation": "supervisor",
+      "missing_ppe": [],
+      "latency_ms": 0.013
+    },
+    {
+      "id": "CASE-12",
+      "name": "Electronics maintenance: missing Safety Glasses",
+      "passed": true,
+      "expected_severity": "CRITICAL",
+      "actual_severity": "CRITICAL",
+      "expected_alert": true,
+      "actual_alert": true,
+      "expected_escalation": "safety_officer",
+      "actual_escalation": "safety_officer",
+      "missing_ppe": [
+        "Safety Glasses"
+      ],
+      "latency_ms": 0.011
+    }
+  ]
+}

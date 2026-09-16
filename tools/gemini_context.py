@@ -8,6 +8,14 @@ import cv2
 from google import genai
 from google.genai import types
 
+try:
+    from langsmith import traceable
+except ImportError:
+    def traceable(*args, **kwargs):
+        def decorator(f):
+            return f
+        return decorator if not args or not callable(args[0]) else args[0]
+
 LOG = logging.getLogger(__name__)
 PROMPT = """Describe only what can reasonably be inferred visually in this industrial image.
 Identify the worker's main task/activity, visible or strongly inferable tools,
@@ -73,6 +81,7 @@ class GeminiContextTool:
                 timeout=30000, retry_options=types.HttpRetryOptions(attempts=1)))
         self.model, self.max_retries, self.sleep = model, max_retries, sleep
 
+    @traceable(name="gemini_scene_analysis", run_type="llm")
     def analyze(self, frame):
         ok, encoded = cv2.imencode(".jpg", frame)
         if not ok:

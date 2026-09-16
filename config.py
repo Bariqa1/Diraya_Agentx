@@ -73,7 +73,7 @@ class Config:
             threshold(os.getenv("PERSON_CONFIDENCE_THRESHOLD", "0.25")),
             positive(os.getenv("VLM_CACHE_TTL", "30"), "VLM_CACHE_TTL"),
             positive(os.getenv("VLM_FAILURE_COOLDOWN", "5"), "VLM_FAILURE_COOLDOWN"),
-            retries, resolve(os.getenv("INPUT_VIDEO", "video_test2.mp4")),
+            retries, resolve(os.getenv("INPUT_VIDEO", "video_test/video_test2.mp4")),
             resolve(os.getenv("OUTPUT_VIDEO", "outputs/context_agent_output.mp4")),
             polygon_points(json.loads(os.getenv("RESTRICTED_ZONE", "[[100,100],[500,100],[550,400],[80,400]]"))),
             positive(os.getenv("LOG_INTERVAL", "1"), "LOG_INTERVAL"),
