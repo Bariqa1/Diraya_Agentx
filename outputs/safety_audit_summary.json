@@ -1,0 +1,37 @@
+{
+  "total_incidents": 3,
+  "critical_incidents": 3,
+  "warning_incidents": 0,
+  "incidents": [
+    {
+      "id": "INC-001",
+      "type": "Missing PPE (Ear Protectors)",
+      "start": 0.0,
+      "end": 13.32,
+      "duration_s": 13.32,
+      "peak_severity": "CRITICAL",
+      "escalation": "safety_officer",
+      "task": "grinding a metal workpiece with an angle grinder"
+    },
+    {
+      "id": "INC-002",
+      "type": "Missing PPE (Face Shield)",
+      "start": 0.0,
+      "end": 13.32,
+      "duration_s": 13.32,
+      "peak_severity": "CRITICAL",
+      "escalation": "safety_officer",
+      "task": "grinding a metal workpiece with an angle grinder"
+    },
+    {
+      "id": "INC-003",
+      "type": "Missing PPE (Safety Glasses)",
+      "start": 4.76,
+      "end": 13.32,
+      "duration_s": 8.56,
+      "peak_severity": "CRITICAL",
+      "escalation": "safety_officer",
+      "task": "grinding a metal workpiece with an angle grinder"
+    }
+  ]
+}
