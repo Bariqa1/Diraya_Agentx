@@ -1,7 +1,15 @@
+# Core Vision & Deep Learning
 ultralytics>=8.4,<9
 torch>=2,<3
+torchvision>=0.15
 opencv-python>=4.10,<5
+numpy>=1.26,<3
+
+# LLM & Agent Framework
 google-genai>=1.56,<2
 langgraph>=1.0,<2
 python-dotenv>=1.0,<2
-numpy>=1.26,<3
+
+# Testing & Observability
+pytest>=8.0
+langsmith>=0.1,<1
