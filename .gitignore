@@ -4,6 +4,7 @@ venv/
 __pycache__/
 *.pyc
 outputs/runs/
+outputs/prediction_summary.json
 yolo*.pt
 .pytest_cache/
 .DS_Store

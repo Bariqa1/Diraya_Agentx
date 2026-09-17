@@ -154,6 +154,7 @@ def main():
                 "console": console_handler,
                 "beep": beep_handler,
             },
+            zone=config.facility_zone,
         )
         process_video(config, agent, ppe, zone, fall, compliance, alert_manager)
     except (ValueError, RuntimeError, OSError) as exc:

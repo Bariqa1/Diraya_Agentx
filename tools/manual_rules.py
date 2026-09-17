@@ -397,13 +397,24 @@ class ManualRules:
         return None
 
     def get_required_ppe(self, task: str) -> dict:
+        task_clean = normalize_task(task) or "unknown"
+
+        # "unknown" is an expected VLM fallback, not a failed manual lookup.
+        # Apply the conservative rule directly without logging once per frame.
+        if task_clean == "unknown":
+            return self._conservative_default()
+
         resolved = self._resolve_task(task)
 
         if resolved:
             return self.rules[resolved]
 
         LOG.info("Task '%s' not resolvable; conservative default",
-                 normalize_task(task))
+                 task_clean)
+        return self._conservative_default()
+
+    @staticmethod
+    def _conservative_default() -> dict:
         return {
             "critical_ppe": list(BASE_MINIMUM_CRITICAL),
             "recommended_ppe": [p for p in KNOWN_PPE if p not in BASE_MINIMUM_CRITICAL],

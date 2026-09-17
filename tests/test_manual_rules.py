@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 from tools.manual_rules import ManualRules, BASE_MINIMUM_CRITICAL
 
 
@@ -34,6 +35,12 @@ class TestManualRules(unittest.TestCase):
         self.assertTrue(rule["requires_manual_review"])
         for base_item in BASE_MINIMUM_CRITICAL:
             self.assertIn(base_item, rule["critical_ppe"])
+
+    def test_explicit_unknown_skips_resolution_log(self):
+        with patch("tools.manual_rules.LOG.info") as log_info:
+            rule = self.rules.get_required_ppe("unknown")
+        self.assertEqual(rule["source"], "conservative_default")
+        log_info.assert_not_called()
 
 
 if __name__ == "__main__":

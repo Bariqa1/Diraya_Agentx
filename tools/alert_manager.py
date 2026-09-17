@@ -24,6 +24,7 @@ class AlertEvent:
     explanation: Optional[str] = None
     frame_id: Optional[str] = None
     incident_id: Optional[str] = None
+    zone: str = "Unspecified Zone"
 
 
 class AlertManager:
@@ -36,12 +37,14 @@ class AlertManager:
         max_alerts_per_window: int = 5,
         alerts_log_path: Path = DEFAULT_ALERTS_LOG,
         handlers: Optional[Dict[str, Callable]] = None,
+        zone: str = "Unspecified Zone",
     ):
         self.dedup_window_sec = dedup_window_sec
         self.throttle_window_sec = throttle_window_sec
         self.max_alerts_per_window = max_alerts_per_window
         self.alerts_log_path = Path(alerts_log_path)
         self.handlers = handlers or {}
+        self.zone = zone
 
         # state
         self._last_sent: Dict[str, float] = {}
@@ -91,6 +94,7 @@ class AlertManager:
             explanation=decision.get("explanation"),
             frame_id=frame_id,
             incident_id=f"ALT-{self._counter:04d}",
+            zone=self.zone,
         )
 
         # 4) Update state

@@ -59,6 +59,7 @@ class Config:
     restricted_zone: np.ndarray
     log_interval: float
     json_interval: float
+    facility_zone: str
 
     @classmethod
     def from_env(cls):
@@ -90,6 +91,7 @@ class Config:
             polygon_points(json.loads(os.getenv("RESTRICTED_ZONE", "[[100,100],[500,100],[550,400],[80,400]]"))),
             positive(os.getenv("LOG_INTERVAL", "1"), "LOG_INTERVAL"),
             positive(os.getenv("JSON_LOG_INTERVAL", "10"), "JSON_LOG_INTERVAL"),
+            os.getenv("FACILITY_ZONE", "Welding Area").strip() or "Welding Area",
         )
 
     def validate_inputs(self):

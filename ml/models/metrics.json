@@ -1,0 +1,47 @@
+{
+  "accuracy": 0.4286,
+  "macro_f1": 0.3333,
+  "labels": [
+    "LOW",
+    "MEDIUM",
+    "HIGH",
+    "CRITICAL"
+  ],
+  "confusion_matrix": [
+    [
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      4,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      3
+    ]
+  ],
+  "train_samples": 25,
+  "test_samples": 7,
+  "class_distribution": {
+    "LOW": 14,
+    "HIGH": 5,
+    "CRITICAL": 13
+  },
+  "training_mode": "short_history_demo",
+  "data_source": "outputs\\alerts.jsonl",
+  "history_hours": 16.48,
+  "note": "Demo-only metrics from a short system alert log; not evidence of real-world performance."
+}
