@@ -44,14 +44,18 @@ class Config:
     api_key: str
     gemini_model: str
     ppe_model: Path
+    fall_model: Path
     person_model: str
     ppe_threshold: float
+    fall_threshold: float
     person_threshold: float
     cache_ttl: float
     failure_cooldown: float
     max_retries: int
     input_video: Path
     output_video: Path
+    processing_width: int
+    processing_height: int
     restricted_zone: np.ndarray
     log_interval: float
     json_interval: float
@@ -65,23 +69,33 @@ class Config:
         person = os.getenv("PERSON_MODEL", "yolo11n.pt").strip()
         if Path(person).parent != Path("."):
             person = str(resolve(person))
+        processing_width = int(os.getenv("PROCESSING_WIDTH", "1280"))
+        processing_height = int(os.getenv("PROCESSING_HEIGHT", "720"))
+        if (processing_width <= 0 or processing_height <= 0
+                or processing_width % 2 or processing_height % 2):
+            raise ValueError("PROCESSING_WIDTH and PROCESSING_HEIGHT must be positive even integers")
         return cls(
             os.getenv("GEMINI_API_KEY", "").strip(),
             os.getenv("GEMINI_MODEL", "").strip(),
-            resolve(os.getenv("PPE_MODEL_PATH", "models/best.pt")), person,
+            resolve(os.getenv("PPE_MODEL_PATH", "models/PPE.pt")),
+            resolve(os.getenv("FALL_MODEL_PATH", "models/Fall.pt")), person,
             threshold(os.getenv("PPE_CONFIDENCE_THRESHOLD", "0.25")),
+            threshold(os.getenv("FALL_CONFIDENCE_THRESHOLD", "0.40")),
             threshold(os.getenv("PERSON_CONFIDENCE_THRESHOLD", "0.25")),
             positive(os.getenv("VLM_CACHE_TTL", "30"), "VLM_CACHE_TTL"),
             positive(os.getenv("VLM_FAILURE_COOLDOWN", "5"), "VLM_FAILURE_COOLDOWN"),
             retries, resolve(os.getenv("INPUT_VIDEO", "video_test/video_test2.mp4")),
             resolve(os.getenv("OUTPUT_VIDEO", "outputs/context_agent_output.mp4")),
+            processing_width, processing_height,
             polygon_points(json.loads(os.getenv("RESTRICTED_ZONE", "[[100,100],[500,100],[550,400],[80,400]]"))),
             positive(os.getenv("LOG_INTERVAL", "1"), "LOG_INTERVAL"),
             positive(os.getenv("JSON_LOG_INTERVAL", "10"), "JSON_LOG_INTERVAL"),
         )
 
     def validate_inputs(self):
-        for name, path in (("PPE_MODEL_PATH", self.ppe_model), ("INPUT_VIDEO", self.input_video)):
+        for name, path in (("PPE_MODEL_PATH", self.ppe_model),
+                           ("FALL_MODEL_PATH", self.fall_model),
+                           ("INPUT_VIDEO", self.input_video)):
             if not path.is_file():
                 raise ValueError(f"{name} file does not exist: {path}")
         if not self.api_key or not self.gemini_model:

@@ -1,4 +1,4 @@
-"""Frame-local person detections and bottom-center polygon membership."""
+"""Persistent person tracking and bottom-center polygon membership."""
 import cv2
 import numpy as np
 import torch
@@ -22,14 +22,28 @@ class ZoneMonitor:
         x1, _, x2, y2 = bbox
         return cv2.pointPolygonTest(self.polygon, ((x1 + x2) / 2, y2), False) >= 0
 
-    def detect(self, frame):
-        result = self.model.predict(frame, classes=[self.person_id], conf=self.confidence, verbose=False)[0]
+    def detect_people(self, frame):
+        """Track people once per frame and retain YOLO track IDs when available."""
+        result = self.model.track(
+            frame, classes=[self.person_id], conf=self.confidence,
+            persist=True, verbose=False,
+        )[0]
         persons = []
         for box in result.boxes:
             bbox = [float(v) for v in box.xyxy[0].tolist()]
-            persons.append(dict(bbox=bbox, confidence=float(box.conf.item()),
-                                inside_restricted_zone=self.contains(bbox)))
+            track_id = int(box.id.item()) if box.id is not None else None
+            persons.append(dict(bbox=bbox, confidence=float(box.conf.item()), track_id=track_id))
+        return persons
+
+    def evaluate_zone(self, persons):
+        """Evaluate the zone using existing tracked boxes; do not infer twice."""
+        persons = [{**person, "inside_restricted_zone": self.contains(person["bbox"])}
+                   for person in persons]
         return {"persons": persons, "violation": any(p["inside_restricted_zone"] for p in persons)}
+
+    def detect(self, frame):
+        """Compatibility wrapper for callers outside the LangGraph."""
+        return self.evaluate_zone(self.detect_people(frame))
 
     def annotate(self, frame, observation):
         """Use native person boxes and labels, plus zone geometry overlays."""

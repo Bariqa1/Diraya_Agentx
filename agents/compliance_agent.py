@@ -69,6 +69,7 @@ class ComplianceAgent:
     def evaluate(self, observation: dict) -> dict:
         context = observation.get("context", {})
         zone = observation.get("zone", {})
+        fall = observation.get("fall", {})
         ppe = observation.get("ppe", {})
 
         task = (context.get("task") or "unknown").strip().lower()
@@ -98,6 +99,7 @@ class ComplianceAgent:
         unknown_task = (rule_source == "conservative_default")
         low_confidence = (context_confidence < self.low_confidence_threshold)
         zone_violation = bool(zone.get("violation", False))
+        fall_detected = bool(fall.get("detected", False))
 
         # ── Compare ──
         missing_critical = [p for p in critical_ppe if p in missing_from_vision]
@@ -106,6 +108,14 @@ class ComplianceAgent:
         # ── Deterministic severity (policy explicit) ──
         severity = "SAFE"
         reasons: List[dict] = []
+
+        if fall_detected:
+            severity = "CRITICAL"
+            reasons.append({
+                "code": "fall_detected",
+                "text": "Possible worker fall detected",
+                "severity": "CRITICAL",
+            })
 
         if zone_violation:
             severity = "CRITICAL"
@@ -180,7 +190,7 @@ class ComplianceAgent:
 
         alert = severity in ("WARNING", "CRITICAL")
 
-        escalation = self._escalation_for(severity, zone_violation)
+        escalation = self._escalation_for(severity, zone_violation, fall_detected)
 
         return {
             "alert": alert,
@@ -196,6 +206,7 @@ class ComplianceAgent:
             "missing_critical_ppe": missing_critical,
             "missing_recommended_ppe": missing_recommended,
             "zone_violation": zone_violation,
+            "fall_detected": fall_detected,
             "unknown_task": unknown_task,
             "low_confidence": low_confidence,
             "reasons": reasons,
@@ -208,13 +219,13 @@ class ComplianceAgent:
         }
 
     @staticmethod
-    def _escalation_for(severity: str, zone_violation: bool) -> str:
+    def _escalation_for(severity: str, zone_violation: bool, fall_detected: bool = False) -> str:
         """Deterministic escalation policy. Documented & auditable."""
         if severity == "SAFE":
             return "none"
         if severity == "WARNING":
             return "supervisor"
-        return "emergency" if zone_violation else "safety_officer"
+        return "emergency" if zone_violation or fall_detected else "safety_officer"
 
     # ══════════════════════════════════════════════════════════
     # LLM EXPLANATION LAYER (does NOT change the decision)
@@ -240,6 +251,7 @@ class ComplianceAgent:
             "detected_ppe": decision.get("detected_ppe"),
             "required_ppe": decision.get("required_ppe"),
             "zone_violation": decision.get("zone_violation"),
+            "fall_detected": decision.get("fall_detected"),
             "unknown_task": decision.get("unknown_task"),
             "low_confidence": decision.get("low_confidence"),
             "task_confidence": decision.get("task_confidence"),

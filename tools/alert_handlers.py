@@ -10,6 +10,7 @@ def console_handler(event):
     print(f"   Task: {event.task}")
     print(f"   Missing PPE: {', '.join(event.missing_ppe) or 'none'}")
     print(f"   Zone violation: {event.zone_violation}")
+    print(f"   Fall detected: {event.fall_detected}")
     print(f"   Escalation: {event.escalation}")
     if event.explanation:
         print(f"   Reason: {event.explanation}")
@@ -41,6 +42,7 @@ def webhook_handler_factory(url: str):
             "text": (
                 f"*{event.severity}* — {event.task}\n"
                 f"Missing PPE: {', '.join(event.missing_ppe) or 'none'}\n"
+                f"Fall detected: {event.fall_detected}\n"
                 f"Escalation: {event.escalation}\n"
                 f"{event.explanation or ''}"
             )

@@ -19,6 +19,7 @@ class AlertEvent:
     task: str
     missing_ppe: List[str]
     zone_violation: bool
+    fall_detected: bool
     reason_codes: List[str]
     explanation: Optional[str] = None
     frame_id: Optional[str] = None
@@ -85,6 +86,7 @@ class AlertManager:
             task=decision.get("task", "unknown"),
             missing_ppe=decision.get("missing_ppe", []),
             zone_violation=bool(decision.get("zone_violation", False)),
+            fall_detected=bool(decision.get("fall_detected", False)),
             reason_codes=[r.get("code", "") for r in decision.get("reasons", [])],
             explanation=decision.get("explanation"),
             frame_id=frame_id,
@@ -111,6 +113,7 @@ class AlertManager:
             decision.get("task", ""),
             ",".join(sorted(decision.get("missing_ppe", []))),
             "zone" if decision.get("zone_violation") else "nozone",
+            "fall" if decision.get("fall_detected") else "nofall",
         ])
 
     def _should_dedupe(self, signature: str, now: float) -> bool:

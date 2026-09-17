@@ -71,6 +71,20 @@ class TestComplianceAgent(unittest.TestCase):
         self.assertTrue(res["zone_violation"])
         self.assertEqual(res["escalation"], "emergency")
 
+    def test_fall_detection_is_critical_emergency(self):
+        obs = {
+            "context": {"task": "walking_in_yard", "confidence": 0.9, "source": "gemini"},
+            "zone": {"violation": False},
+            "fall": {"detected": True, "confidence": 0.92},
+            "ppe": {"detections": [{"class": "Helmet", "confidence": 0.9}]},
+        }
+        res = self.agent.evaluate(obs)
+        self.assertTrue(res["alert"])
+        self.assertTrue(res["fall_detected"])
+        self.assertEqual(res["severity"], "CRITICAL")
+        self.assertEqual(res["escalation"], "emergency")
+        self.assertIn("fall_detected", [reason["code"] for reason in res["reasons"]])
+
     def test_unknown_task_escalation(self):
         obs = {
             "context": {"task": "unknown_chore", "confidence": 0.9, "source": "gemini"},

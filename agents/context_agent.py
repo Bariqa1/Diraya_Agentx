@@ -1,7 +1,8 @@
 from copy import deepcopy
 import logging
 import math
-from typing import Any, TypedDict
+import operator
+from typing import Annotated, Any, TypedDict
 
 from langgraph.graph import END, START, StateGraph
 
@@ -14,7 +15,10 @@ LOG = logging.getLogger(__name__)
 class ContextState(TypedDict, total=False):
     frame: Any
     timestamp: float
+    persons: list[dict]
+    person_detected: bool
     ppe: dict
+    fall: dict
     zone: dict
     context: dict
     cached_context: dict | None
@@ -23,32 +27,64 @@ class ContextState(TypedDict, total=False):
     gemini_called: bool
     force_vlm: bool
     route: str
-    errors: list[str]
+    errors: Annotated[list[str], operator.add]
     status: str
     observation: dict
 
 
 class ContextAgent:
-    def __init__(self, ppe_detector, context_tool, zone_monitor, cache_ttl=30,
-                 failure_cooldown=5, log_interval=1):
-        self.ppe_detector, self.context_tool, self.zone_monitor = ppe_detector, context_tool, zone_monitor
+    """Tracked-person-gated LangGraph perception and compliance workflow."""
+
+    def __init__(self, ppe_detector, context_tool, zone_monitor, fall_detector=None,
+                 compliance_agent=None, cache_ttl=30, failure_cooldown=5, log_interval=1):
+        self.ppe_detector = ppe_detector
+        self.context_tool = context_tool
+        self.zone_monitor = zone_monitor
+        self.fall_detector = fall_detector
+        self.compliance_agent = compliance_agent
         self.cache_ttl = positive(cache_ttl, "cache_ttl")
         self.failure_cooldown = positive(failure_cooldown, "failure_cooldown")
         self.log_interval = positive(log_interval, "log_interval")
         self.reset_cache()
+
+        context_graph = StateGraph(ContextState)
+        context_graph.add_node("check_cache", self._check)
+        context_graph.add_node("use_cache", self._cached)
+        context_graph.add_node("gemini", self._gemini)
+        context_graph.add_edge(START, "check_cache")
+        context_graph.add_conditional_edges(
+            "check_cache", lambda state: state["route"],
+            {"cache": "use_cache", "vlm": "gemini"},
+        )
+        context_graph.add_edge("use_cache", END)
+        context_graph.add_edge("gemini", END)
+        self.context_graph = context_graph.compile()
+
         graph = StateGraph(ContextState)
-        for name, node in (("ppe_detection", self._ppe), ("zone_monitoring", self._zone),
-                           ("check_cache", self._check), ("use_cache", self._cached),
-                           ("gemini", self._gemini), ("fusion", self._fuse)):
+        for name, node in (
+            ("person_tracking", self._persons), ("no_person", self._no_person),
+            ("context_resolution", self.context_graph),
+            ("ppe_detection", self._ppe),
+            ("fall_detection", self._fall), ("zone_monitoring", self._zone),
+            ("fusion", self._fuse), ("compliance", self._compliance),
+        ):
             graph.add_node(name, node)
-        graph.add_edge(START, "check_cache")
-        graph.add_conditional_edges("check_cache", lambda s: s["route"],
-                                    {"cache": "use_cache", "vlm": "gemini"})
-        graph.add_edge("use_cache", "ppe_detection")
-        graph.add_edge("gemini", "ppe_detection")
-        graph.add_edge("ppe_detection", "zone_monitoring")
-        graph.add_edge("zone_monitoring", "fusion")
-        graph.add_edge("fusion", END)
+
+        graph.add_edge(START, "person_tracking")
+        graph.add_conditional_edges(
+            "person_tracking",
+            self._route_after_person_tracking,
+            {"context": "context_resolution", "ppe": "ppe_detection",
+             "fall": "fall_detection", "zone": "zone_monitoring",
+             "empty": "no_person"},
+        )
+        graph.add_edge("no_person", END)
+        graph.add_edge(
+            ["context_resolution", "ppe_detection", "fall_detection", "zone_monitoring"],
+            "fusion",
+        )
+        graph.add_edge("fusion", "compliance")
+        graph.add_edge("compliance", END)
         self.graph = graph.compile()
 
     def reset_cache(self):
@@ -58,19 +94,58 @@ class ContextAgent:
         self._was_in_violation = False
         self._pending_force_vlm = False
 
+    def _persons(self, state):
+        try:
+            persons = self.zone_monitor.detect_people(state["frame"])
+            return {"persons": persons, "person_detected": bool(persons)}
+        except Exception as exc:
+            return {"persons": [], "person_detected": False,
+                    "errors": [f"person:{type(exc).__name__}"]}
+
+    @staticmethod
+    def _route_after_person_tracking(state):
+        """Fan out four branches for a tracked person, or skip the frame."""
+        if not state["person_detected"]:
+            return "empty"
+        return ["context", "ppe", "fall", "zone"]
+
+    def _no_person(self, state):
+        status = "degraded" if state["errors"] else "no_person"
+        observation = {
+            "timestamp": state["timestamp"], "person_detected": False, "persons": [],
+            "ppe": {"detections": [], "confidence": None},
+            "fall": {"detected": False, "detections": [], "confidence": None},
+            "context": {**unknown_context(), "source": "skipped_no_person"},
+            "zone": {"persons": [], "violation": False},
+            "confidence": {"ppe": None, "fall": None, "context": 0.0,
+                           "zone": None, "overall": None},
+            "status": status, "errors": state["errors"], "gemini_called": False,
+            "context_timestamp": state["cache_timestamp"], "compliance": None,
+        }
+        return {"observation": observation, "status": status}
+
     def _ppe(self, state):
         try:
             return {"ppe": self.ppe_detector.detect(state["frame"])}
         except Exception as exc:
             return {"ppe": {"detections": [], "confidence": None},
-                    "errors": state["errors"] + [f"ppe:{type(exc).__name__}"]}
+                    "errors": [f"ppe:{type(exc).__name__}"]}
+
+    def _fall(self, state):
+        if self.fall_detector is None:
+            return {"fall": {"detected": False, "detections": [], "confidence": None}}
+        try:
+            return {"fall": self.fall_detector.detect(state["frame"])}
+        except Exception as exc:
+            return {"fall": {"detected": False, "detections": [], "confidence": None},
+                    "errors": [f"fall:{type(exc).__name__}"]}
 
     def _zone(self, state):
         try:
-            return {"zone": self.zone_monitor.detect(state["frame"])}
+            return {"zone": self.zone_monitor.evaluate_zone(state["persons"])}
         except Exception as exc:
-            return {"zone": {"persons": [], "violation": None},
-                    "errors": state["errors"] + [f"zone:{type(exc).__name__}"]}
+            return {"zone": {"persons": state["persons"], "violation": None},
+                    "errors": [f"zone:{type(exc).__name__}"]}
 
     def _check(self, state):
         valid = (state["cached_context"] is not None and state["cache_timestamp"] is not None
@@ -89,21 +164,20 @@ class ContextAgent:
     def _cached(self, state):
         failed = state["retry_after"] is not None and state["timestamp"] < state["retry_after"]
         context = deepcopy(state["cached_context"]) if state["cached_context"] is not None else unknown_context()
-        if state["cached_context"] is None:
-            source = "unavailable"
-        elif failed:
-            source = "cache_after_vlm_failure"
-        else:
-            source = "cache"
-        errors = state["errors"] + (["gemini:failure_cooldown"] if failed else [])
-        return {"context": {**context, "source": source}, "errors": errors}
+        source = ("unavailable" if state["cached_context"] is None else
+                  "cache_after_vlm_failure" if failed else "cache")
+        result = {"context": {**context, "source": source}}
+        if failed:
+            result["errors"] = ["gemini:failure_cooldown"]
+        return result
 
     def _gemini(self, state):
         try:
             context = self.context_tool.analyze(state["frame"])
             LOG.info("[%s] Gemini context: %s", self._stamp(state["timestamp"]), context["task"])
-            return {"context": {**context, "source": "gemini"}, "cached_context": deepcopy(context),
-                    "cache_timestamp": state["timestamp"], "retry_after": None, "gemini_called": True}
+            return {"context": {**context, "source": "gemini"},
+                    "cached_context": deepcopy(context), "cache_timestamp": state["timestamp"],
+                    "retry_after": None, "gemini_called": True}
         except Exception as exc:
             code = getattr(exc, "code", None)
             hints = {400: "Check the Gemini model ID and request configuration.",
@@ -116,19 +190,29 @@ class ContextAgent:
             source = "cache_after_vlm_failure" if state["cached_context"] is not None else "unavailable"
             return {"context": {**context, "source": source}, "gemini_called": True,
                     "retry_after": state["timestamp"] + self.failure_cooldown,
-                    "errors": state["errors"] + [f"gemini:{type(exc).__name__}"]}
+                    "errors": [f"gemini:{type(exc).__name__}"]}
 
     def _fuse(self, state):
         status = "degraded" if state["errors"] else "ok"
         observation = {
-            "timestamp": state["timestamp"], "ppe": state["ppe"],
+            "timestamp": state["timestamp"], "person_detected": True,
+            "persons": state["persons"], "ppe": state["ppe"], "fall": state["fall"],
             "context": state["context"], "zone": state["zone"],
-            "confidence": {"ppe": state["ppe"]["confidence"], "context": state["context"]["confidence"],
+            "confidence": {"ppe": state["ppe"]["confidence"],
+                           "fall": state["fall"]["confidence"],
+                           "context": state["context"]["confidence"],
                            "zone": None, "overall": None},
-            "status": status, "errors": state["errors"], "gemini_called": state["gemini_called"],
+            "status": status, "errors": state["errors"],
+            "gemini_called": state["gemini_called"],
             "context_timestamp": state["cache_timestamp"],
         }
         return {"observation": observation, "status": status}
+
+    def _compliance(self, state):
+        observation = state["observation"]
+        if self.compliance_agent is not None:
+            observation = {**observation, "compliance": self.compliance_agent.evaluate(observation)}
+        return {"observation": observation}
 
     @staticmethod
     def _stamp(timestamp):
@@ -143,21 +227,14 @@ class ContextAgent:
         if self._last_timestamp is not None and timestamp < self._last_timestamp:
             self.reset_cache()
 
-        cooling = (self._memory["retry_after"] is not None
-                   and timestamp < self._memory["retry_after"])
+        cooling = self._memory["retry_after"] is not None and timestamp < self._memory["retry_after"]
         force_vlm = self._pending_force_vlm and not cooling
         if force_vlm:
             self._pending_force_vlm = False
         was_in_violation = self._was_in_violation
-
-        state = self.graph.invoke({
-            **deepcopy(self._memory),
-            "frame": frame,
-            "timestamp": timestamp,
-            "errors": [],
-            "gemini_called": False,
-            "force_vlm": force_vlm,
-        })
+        state = self.graph.invoke({**deepcopy(self._memory), "frame": frame,
+                                   "timestamp": timestamp, "errors": [],
+                                   "gemini_called": False, "force_vlm": force_vlm})
         self._memory = {key: deepcopy(state[key]) for key in self._memory}
         self._last_timestamp = timestamp
 
@@ -165,15 +242,16 @@ class ContextAgent:
         if not current_violation:
             self._pending_force_vlm = False
         elif not was_in_violation:
-            LOG.info("[%s] Zone violation STARTED - forcing VLM refresh next frame",
-                     self._stamp(timestamp))
+            LOG.info("[%s] Zone violation STARTED - forcing VLM refresh next frame", self._stamp(timestamp))
             self._pending_force_vlm = True
         self._was_in_violation = current_violation
 
         if timestamp - self._last_log >= self.log_interval:
-            LOG.info("[%s] PPE %s; context=%s; zone=%s; status=%s", self._stamp(timestamp),
-                     "failed" if any(e.startswith("ppe:") for e in state["errors"]) else "detection complete",
-                     state["context"]["source"], state["zone"]["violation"], state["status"])
+            if state["person_detected"]:
+                LOG.info("[%s] persons=%d; PPE complete; fall=%s; context=%s; zone=%s; status=%s",
+                         self._stamp(timestamp), len(state["persons"]), state["fall"]["detected"],
+                         state["context"]["source"], state["zone"]["violation"], state["status"])
+            else:
+                LOG.info("[%s] no person detected; remaining graph skipped", self._stamp(timestamp))
             self._last_log = timestamp
-
         return state["observation"]
