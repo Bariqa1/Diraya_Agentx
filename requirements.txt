@@ -20,9 +20,8 @@ langsmith>=0.1,<1
 openai>=1.30,<2
 fastapi>=0.110,<1
 uvicorn>=0.29,<1
-
-# Interactive Simulation & Audio
-pygame>=2.5,<3
+pydantic>=2.0,<3
+httpx>=0.27,<1
 
 # Environment & Weather Service
 requests>=2.31,<3
