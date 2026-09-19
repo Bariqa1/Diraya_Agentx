@@ -7,6 +7,7 @@
 [![YOLOv11](https://img.shields.io/badge/YOLOv11-Edge_AI-00FFFF?style=flat-square&logo=yolo&logoColor=black)](https://github.com/ultralytics/ultralytics)
 [![Google Gemini](https://img.shields.io/badge/Google_Gemini-Agentic_AI-8E75C2?style=flat-square&logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
 [![Regulatory Compliance](https://img.shields.io/badge/Compliance-MHRSD_3337_%7C_ISO_7243-006C35?style=flat-square)](https://hrsd.gov.sa/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 
 DIRAYA is an autonomous, multi-agent AI platform engineered for real-time industrial safety management, occupational hazard mitigation, and intelligent video surveillance. It continuously inspects safety violations, enforces physical role-based access control (RBAC), calculates environmental heat stress, and dispatches automated countermeasures across manufacturing facilities, construction projects, and energy infrastructure.
 
