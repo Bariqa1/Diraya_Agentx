@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 import type { Locale } from "@/lib/locale";
 
 const BACKEND_URL =
-  (import.meta.env["VITE_ENVIRONMENT_AGENT_URL"] as string | undefined)?.replace(/\/$/, "") ||
+  ((import.meta.env["VITE_ENVIRONMENT_AGENT_URL"] || import.meta.env["VITE_API_URL"]) as string | undefined)?.replace(/\/$/, "") ||
   "http://localhost:8000";
 
 type ZoneItem = {

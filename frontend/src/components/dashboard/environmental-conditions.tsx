@@ -120,7 +120,9 @@ const copy = {
   },
 } as const;
 
-const ENVIRONMENT_AGENT_URL = (import.meta.env["VITE_ENVIRONMENT_AGENT_URL"] as string | undefined)?.replace(/\/$/, "") || "http://localhost:8000";
+const ENVIRONMENT_AGENT_URL =
+  ((import.meta.env["VITE_ENVIRONMENT_AGENT_URL"] || import.meta.env["VITE_API_URL"]) as string | undefined)?.replace(/\/$/, "") ||
+  "http://localhost:8000";
 
 function firstValue(source: AgentSection | undefined, keys: string[]) {
   for (const key of keys) {

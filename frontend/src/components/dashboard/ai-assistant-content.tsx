@@ -6,7 +6,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { Locale } from "@/lib/locale";
 
-const BACKEND_URL = (import.meta.env["VITE_ENVIRONMENT_AGENT_URL"] as string | undefined)?.replace(/\/$/, "") || "http://localhost:8000";
+const BACKEND_URL =
+  ((import.meta.env["VITE_ENVIRONMENT_AGENT_URL"] || import.meta.env["VITE_API_URL"]) as string | undefined)?.replace(/\/$/, "") ||
+  "http://localhost:8000";
 
 type ChatRole = "user" | "assistant";
 
