@@ -1,7 +1,7 @@
 [build]
   base = "frontend"
   command = "npm run build"
-  publish = ".output/public"
+  publish = "dist"
 
 [build.environment]
   NITRO_PRESET = "netlify"
