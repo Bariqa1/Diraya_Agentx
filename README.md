@@ -273,7 +273,7 @@ Diraya_Agentx/
 
 <div align="center">
 
-### 🏆 دِراية — نحو بيئة عمل صناعية آمنة، ذكية، ومستدامة.
-**تم التطوير بواسطة: بريقة الجارالله (Bariqa aljarallah)**
+### 🏆 DIRAYA — Towards a Safer, Smarter, and Sustainable Industrial Workplace.
+**Developed by Bariqa Aljarallah**
 
 </div>
