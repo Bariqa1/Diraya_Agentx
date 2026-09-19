@@ -8,3 +8,5 @@ outputs/prediction_summary.json
 yolo*.pt
 .pytest_cache/
 .DS_Store
+*.mlpackage
+outputs/video_test7_output.mp4

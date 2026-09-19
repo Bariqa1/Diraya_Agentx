@@ -15,3 +15,14 @@ python-dotenv>=1.0,<2
 # Testing & Observability
 pytest>=8.0
 langsmith>=0.1,<1
+
+# Chat Assistant & API
+openai>=1.30,<2
+fastapi>=0.110,<1
+uvicorn>=0.29,<1
+
+# Interactive Simulation & Audio
+pygame>=2.5,<3
+
+# Environment & Weather Service
+requests>=2.31,<3

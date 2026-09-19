@@ -72,37 +72,107 @@ def parse_context(text):
 
 class GeminiContextTool:
     def __init__(self, api_key, model, max_retries=2, client=None, sleep=time.sleep):
-        if not api_key or not model:
-            raise ValueError("GEMINI_API_KEY and GEMINI_MODEL are required")
+        import os
+        openai_key = os.getenv("OPENAI_API_KEY", "").strip()
+        openai_model = os.getenv("OPENAI_MODEL", "gpt-4o-mini").strip()
+        vlm_provider = os.getenv("VLM_PROVIDER", "").strip().lower()
+
+        if (api_key and str(api_key).startswith("sk-")) or vlm_provider == "openai" or (not api_key and openai_key):
+            self.provider = "openai"
+            self.api_key = api_key if (api_key and str(api_key).startswith("sk-")) else openai_key
+            self.model = model if (model and not model.startswith("gemini")) else openai_model
+        elif api_key:
+            self.provider = "gemini"
+            self.api_key = api_key
+            self.model = model
+        elif openai_key:
+            self.provider = "openai"
+            self.api_key = openai_key
+            self.model = openai_model
+        else:
+            raise ValueError("GEMINI_API_KEY or OPENAI_API_KEY is required")
+
         if not 0 <= max_retries <= 5:
             raise ValueError("max_retries must be between 0 and 5")
-        self.client = client if client is not None else genai.Client(
-            api_key=api_key, http_options=types.HttpOptions(
-                timeout=30000, retry_options=types.HttpRetryOptions(attempts=1)))
-        self.model, self.max_retries, self.sleep = model, max_retries, sleep
 
-    @traceable(name="gemini_scene_analysis", run_type="llm")
+        self.max_retries = max_retries
+        self.sleep = sleep
+
+        if client is not None:
+            self.client = client
+        elif self.provider == "openai":
+            from openai import OpenAI
+            self.client = OpenAI(api_key=self.api_key)
+            LOG.info("VLM Context Tool initialized with OpenAI (model: %s)", self.model)
+        else:
+            from google import genai
+            from google.genai import types
+            self.client = genai.Client(
+                api_key=self.api_key,
+                http_options=types.HttpOptions(
+                    timeout=30000,
+                    retry_options=types.HttpRetryOptions(attempts=1),
+                ),
+            )
+            LOG.info("VLM Context Tool initialized with Gemini (model: %s)", self.model)
+
+    @traceable(name="vlm_scene_analysis", run_type="llm")
     def analyze(self, frame):
-        ok, encoded = cv2.imencode(".jpg", frame)
+        ok, encoded = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
         if not ok:
-            raise ValueError("Could not encode frame for Gemini")
+            raise ValueError("Could not encode frame for VLM")
+
         for attempt in range(self.max_retries + 1):
             try:
-                response = self.client.models.generate_content(
-                    model=self.model,
-                    contents=[PROMPT, types.Part.from_bytes(data=encoded.tobytes(), mime_type="image/jpeg")],
-                    config=types.GenerateContentConfig(
-                        response_mime_type="application/json", response_json_schema=SCHEMA,
-                        temperature=0),
-                )
-                return parse_context(response.text)
+                if self.provider == "openai":
+                    import base64
+                    b64 = base64.b64encode(encoded.tobytes()).decode("utf-8")
+                    response = self.client.chat.completions.create(
+                        model=self.model,
+                        messages=[
+                            {
+                                "role": "user",
+                                "content": [
+                                    {"type": "text", "text": PROMPT},
+                                    {
+                                        "type": "image_url",
+                                        "image_url": {
+                                            "url": f"data:image/jpeg;base64,{b64}",
+                                            "detail": "low",
+                                        },
+                                    },
+                                ],
+                            }
+                        ],
+                        response_format={"type": "json_object"},
+                        temperature=0.0,
+                    )
+                    raw_text = response.choices[0].message.content
+                    return parse_context(raw_text)
+                else:
+                    from google.genai import types
+                    response = self.client.models.generate_content(
+                        model=self.model,
+                        contents=[PROMPT, types.Part.from_bytes(data=encoded.tobytes(), mime_type="image/jpeg")],
+                        config=types.GenerateContentConfig(
+                            response_mime_type="application/json",
+                            response_json_schema=SCHEMA,
+                            temperature=0,
+                        ),
+                    )
+                    return parse_context(response.text)
             except Exception as exc:
-                code = getattr(exc, "code", None)
+                code = getattr(exc, "status_code", getattr(exc, "code", None))
                 if attempt == self.max_retries or (code is not None and code not in (408, 429, 500, 502, 503, 504)):
                     raise
                 delay = 2 ** attempt
-                LOG.warning("Gemini failed (%s); retry %d/%d in %ds", type(exc).__name__, attempt + 1, self.max_retries, delay)
+                LOG.warning("VLM failed (%s); retry %d/%d in %ds", type(exc).__name__, attempt + 1, self.max_retries, delay)
                 self.sleep(delay)
 
     def close(self):
-        self.client.close()
+        if hasattr(self.client, "close"):
+            try:
+                self.client.close()
+            except Exception:
+                pass
+

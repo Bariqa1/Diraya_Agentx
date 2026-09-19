@@ -2,6 +2,7 @@
 import json
 import math
 import os
+import threading
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -39,6 +40,53 @@ def resolve(value):
     return path if path.is_absolute() else ROOT / path
 
 
+def get_optimal_device(requested_device=None):
+    """Auto-detects fastest hardware: MPS (Apple Silicon GPU), CUDA (NVIDIA GPU), or CPU."""
+    if requested_device and requested_device != "auto":
+        return requested_device
+    env_device = os.getenv("DEVICE", "auto").strip().lower()
+    if env_device and env_device != "auto":
+        return env_device
+    try:
+        import torch
+        if torch.backends.mps.is_available():
+            return "mps"
+        if torch.cuda.is_available():
+            return "cuda"
+    except Exception:
+        pass
+    return "cpu"
+
+
+_DEVICE_LOCK = threading.Lock()
+
+
+class _DeviceLockContext:
+    def __init__(self, device: str):
+        self.device = str(device).lower()
+
+    def __enter__(self):
+        if self.device == "mps":
+            _DEVICE_LOCK.acquire()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.device == "mps":
+            try:
+                import torch
+                if torch.backends.mps.is_available():
+                    torch.mps.synchronize()
+            except Exception:
+                pass
+            finally:
+                _DEVICE_LOCK.release()
+
+
+def device_inference_lock(device: str = "cpu"):
+    """Thread-safe context manager for MPS inference to prevent Metal command buffer race conditions."""
+    return _DeviceLockContext(device)
+
+
 @dataclass
 class Config:
     api_key: str
@@ -60,6 +108,7 @@ class Config:
     log_interval: float
     json_interval: float
     facility_zone: str
+    device: str = "auto"
 
     @classmethod
     def from_env(cls):
@@ -67,17 +116,32 @@ class Config:
         retries = int(os.getenv("GEMINI_MAX_RETRIES", "2"))
         if not 0 <= retries <= 5:
             raise ValueError("GEMINI_MAX_RETRIES must be between 0 and 5")
-        person = os.getenv("PERSON_MODEL", "yolo11n.pt").strip()
+        person = os.getenv("PERSON_MODEL", "models/yolo11n.pt").strip()
         if Path(person).parent != Path("."):
             person = str(resolve(person))
+        elif (ROOT / "models" / person).exists():
+            person = str(resolve(f"models/{person}"))
         processing_width = int(os.getenv("PROCESSING_WIDTH", "1280"))
         processing_height = int(os.getenv("PROCESSING_HEIGHT", "720"))
         if (processing_width <= 0 or processing_height <= 0
                 or processing_width % 2 or processing_height % 2):
             raise ValueError("PROCESSING_WIDTH and PROCESSING_HEIGHT must be positive even integers")
+        vlm_provider = os.getenv("VLM_PROVIDER", "").strip().lower()
+        openai_key = os.getenv("OPENAI_API_KEY", "").strip()
+        gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
+        openai_model = os.getenv("OPENAI_MODEL", "gpt-4o-mini").strip()
+        gemini_model = os.getenv("GEMINI_MODEL", "").strip()
+
+        if vlm_provider == "openai" or (openai_key and not gemini_key):
+            api_key = openai_key
+            model = openai_model
+        else:
+            api_key = gemini_key or openai_key
+            model = gemini_model or openai_model
+
         return cls(
-            os.getenv("GEMINI_API_KEY", "").strip(),
-            os.getenv("GEMINI_MODEL", "").strip(),
+            api_key,
+            model,
             resolve(os.getenv("PPE_MODEL_PATH", "models/PPE.pt")),
             resolve(os.getenv("FALL_MODEL_PATH", "models/Fall.pt")), person,
             threshold(os.getenv("PPE_CONFIDENCE_THRESHOLD", "0.25")),
@@ -92,6 +156,7 @@ class Config:
             positive(os.getenv("LOG_INTERVAL", "1"), "LOG_INTERVAL"),
             positive(os.getenv("JSON_LOG_INTERVAL", "10"), "JSON_LOG_INTERVAL"),
             os.getenv("FACILITY_ZONE", "Welding Area").strip() or "Welding Area",
+            os.getenv("DEVICE", "auto").strip() or "auto",
         )
 
     def validate_inputs(self):
@@ -101,6 +166,7 @@ class Config:
             if not path.is_file():
                 raise ValueError(f"{name} file does not exist: {path}")
         if not self.api_key or not self.gemini_model:
-            raise ValueError("Set GEMINI_API_KEY and GEMINI_MODEL in .env")
+            raise ValueError("Set OPENAI_API_KEY or GEMINI_API_KEY in .env")
         if self.input_video.resolve() == self.output_video.resolve():
             raise ValueError("OUTPUT_VIDEO must differ from INPUT_VIDEO")
+

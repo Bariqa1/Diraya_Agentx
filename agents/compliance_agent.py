@@ -260,20 +260,38 @@ class ComplianceAgent:
         }
 
         try:
-            from google.genai import types
-            response = self.llm_client.models.generate_content(
-                model=self.llm_model,
-                contents=EXPLANATION_PROMPT.format(
-                    decision_json=_json.dumps(facts, ensure_ascii=False, indent=2)
-                ),
-                config=types.GenerateContentConfig(
+            if hasattr(self.llm_client, "chat"):
+                # OpenAI client
+                response = self.llm_client.chat.completions.create(
+                    model=self.llm_model or "gpt-4o-mini",
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": EXPLANATION_PROMPT.format(
+                                decision_json=_json.dumps(facts, ensure_ascii=False, indent=2)
+                            ),
+                        }
+                    ],
                     temperature=0.3,
-                    max_output_tokens=200,
-                ),
-            )
-            text = (response.text or "").strip()
+                    max_tokens=200,
+                )
+                text = (response.choices[0].message.content or "").strip()
+            else:
+                from google.genai import types
+                response = self.llm_client.models.generate_content(
+                    model=self.llm_model,
+                    contents=EXPLANATION_PROMPT.format(
+                        decision_json=_json.dumps(facts, ensure_ascii=False, indent=2)
+                    ),
+                    config=types.GenerateContentConfig(
+                        temperature=0.3,
+                        max_output_tokens=200,
+                    ),
+                )
+                text = (response.text or "").strip()
         except Exception as exc:
             LOG.warning("Explanation layer failed: %s", exc)
             text = None
+
 
         return {**decision, "explanation": text}

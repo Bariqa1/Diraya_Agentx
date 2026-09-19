@@ -1,0 +1,57 @@
+{
+  "signs": [
+    {
+      "sign_id": "SIGN-01",
+      "text": "DANGER: DEMOLITION IN PROGRESS - KEEP OUT",
+      "text_ar": "خطر: أعمال هدم جارية - ممنوع الاقتراب",
+      "hazard_type": "restricted_area",
+      "safety_distance_meters": 3.5,
+      "required_ppe": [
+        "Helmet",
+        "Safety Boots",
+        "Safety Vest"
+      ],
+      "sign_bbox": [
+        565,
+        130,
+        760,
+        320
+      ]
+    },
+    {
+      "sign_id": "SIGN-02",
+      "text": "DO NOT ENTER",
+      "text_ar": "ممنوع الدخول",
+      "hazard_type": "restricted_area",
+      "safety_distance_meters": 3.0,
+      "required_ppe": [
+        "Authorized Access Only",
+        "Helmet",
+        "Safety Boots"
+      ],
+      "sign_bbox": [
+        545,
+        270,
+        685,
+        415
+      ]
+    },
+    {
+      "sign_id": "SIGN-03",
+      "text": "DANGER: KEEP OUT - BARRICADE PERIMETER",
+      "text_ar": "خطر: ممنوع الاقتراب - محيط شريطي",
+      "hazard_type": "restricted_area",
+      "safety_distance_meters": 3.0,
+      "required_ppe": [
+        "Helmet",
+        "Safety Boots"
+      ],
+      "sign_bbox": [
+        725,
+        260,
+        825,
+        395
+      ]
+    }
+  ]
+}

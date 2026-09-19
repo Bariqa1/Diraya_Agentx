@@ -5,29 +5,42 @@ import torch
 from ultralytics import YOLO
 from ultralytics.engine.results import Results
 
-from config import polygon_points, threshold
+from config import device_inference_lock, get_optimal_device, polygon_points, threshold
 
 
 class ZoneMonitor:
-    def __init__(self, model_name, polygon, confidence=0.25):
+    def __init__(self, model_name, polygon, confidence=0.25, device=None):
         self.polygon = polygon_points(polygon)
         self.confidence = threshold(confidence)
+        self.device = get_optimal_device(device)
         self.model = YOLO(model_name)
         ids = [i for i, name in self.model.names.items() if name == "person"]
         if len(ids) != 1:
             raise ValueError("PERSON_MODEL must contain a person class")
         self.person_id = ids[0]
+        self.dynamic_polygons = []
+
+    def set_dynamic_polygons(self, polygons):
+        """Register dynamic hazard polygons (e.g. from signboards or barricades)."""
+        self.dynamic_polygons = [np.array(p, dtype=np.int32) for p in (polygons or [])]
 
     def contains(self, bbox):
         x1, _, x2, y2 = bbox
-        return cv2.pointPolygonTest(self.polygon, ((x1 + x2) / 2, y2), False) >= 0
+        pt = ((x1 + x2) / 2, y2)
+        if hasattr(self, "polygon") and len(self.polygon) >= 3 and cv2.pointPolygonTest(self.polygon, pt, False) >= 0:
+            return True
+        for dp in getattr(self, "dynamic_polygons", []):
+            if len(dp) >= 3 and cv2.pointPolygonTest(dp, pt, False) >= 0:
+                return True
+        return False
 
     def detect_people(self, frame):
         """Track people once per frame and retain YOLO track IDs when available."""
-        result = self.model.track(
-            frame, classes=[self.person_id], conf=self.confidence,
-            persist=True, verbose=False,
-        )[0]
+        with device_inference_lock(self.device):
+            result = self.model.track(
+                frame, classes=[self.person_id], conf=self.confidence,
+                device=self.device, persist=True, verbose=False,
+            )[0]
         persons = []
         for box in result.boxes:
             bbox = [float(v) for v in box.xyxy[0].tolist()]

@@ -15,7 +15,7 @@
       "confidence": 1.0,
       "requires_manual_review": false,
       "approved_by": "system_parser",
-      "approved_at": 1789590001.0826828
+      "approved_at": 1789777948.750412
     },
     "grinding": {
       "critical_ppe": [
@@ -32,7 +32,7 @@
       "confidence": 1.0,
       "requires_manual_review": false,
       "approved_by": "system_parser",
-      "approved_at": 1789590001.082688
+      "approved_at": 1789777948.750425
     },
     "working_at_height": {
       "critical_ppe": [
@@ -48,7 +48,7 @@
       "confidence": 1.0,
       "requires_manual_review": false,
       "approved_by": "system_parser",
-      "approved_at": 1789590001.082691
+      "approved_at": 1789777948.750432
     },
     "operating_machinery": {
       "critical_ppe": [
@@ -64,7 +64,7 @@
       "confidence": 1.0,
       "requires_manual_review": false,
       "approved_by": "system_parser",
-      "approved_at": 1789590001.0826938
+      "approved_at": 1789777948.75044
     },
     "walking_in_yard": {
       "critical_ppe": [
@@ -79,7 +79,7 @@
       "confidence": 1.0,
       "requires_manual_review": false,
       "approved_by": "system_parser",
-      "approved_at": 1789590001.082696
+      "approved_at": 1789777948.750446
     },
     "entering_restricted_area": {
       "critical_ppe": [
@@ -95,7 +95,7 @@
       "confidence": 1.0,
       "requires_manual_review": false,
       "approved_by": "system_parser",
-      "approved_at": 1789590001.082699
+      "approved_at": 1789777948.7504508
     },
     "woodworking": {
       "critical_ppe": [
@@ -110,7 +110,7 @@
       "confidence": 1.0,
       "requires_manual_review": false,
       "approved_by": "system_parser",
-      "approved_at": 1789590001.082701
+      "approved_at": 1789777948.750457
     },
     "electronics": {
       "critical_ppe": [
@@ -124,7 +124,7 @@
       "confidence": 1.0,
       "requires_manual_review": false,
       "approved_by": "system_parser",
-      "approved_at": 1789590001.082703
+      "approved_at": 1789777948.750466
     },
     "pipe_fitting": {
       "critical_ppe": [
@@ -141,7 +141,7 @@
       "confidence": 1.0,
       "requires_manual_review": false,
       "approved_by": "system_parser",
-      "approved_at": 1789590001.0827048
+      "approved_at": 1789777948.750473
     },
     "electrical_maintenance": {
       "critical_ppe": [
@@ -159,8 +159,39 @@
       "confidence": 1.0,
       "requires_manual_review": false,
       "approved_by": "system_parser",
-      "approved_at": 1789590001.082708
+      "approved_at": 1789777948.750481
     }
   },
-  "aliases": {}
+  "aliases": {
+    "arc_welding": "welding",
+    "soldering": "welding",
+    "metal_joining": "welding",
+    "surface_grinding": "grinding",
+    "sanding": "grinding",
+    "abrasive_machining": "grinding",
+    "height_work": "working_at_height",
+    "elevated_work": "working_at_height",
+    "roof_work": "working_at_height",
+    "machine_operation": "operating_machinery",
+    "equipment_operation": "operating_machinery",
+    "machining": "operating_machinery",
+    "yard_walk": "walking_in_yard",
+    "site_walk": "walking_in_yard",
+    "yard_inspection": "walking_in_yard",
+    "restricted_area_access": "entering_restricted_area",
+    "zone_entry": "entering_restricted_area",
+    "secure_area_entry": "entering_restricted_area",
+    "carpentry": "woodworking",
+    "timber_work": "woodworking",
+    "wood_crafting": "woodworking",
+    "electronic_repair": "electronics",
+    "circuit_work": "electronics",
+    "electronics_assembly": "electronics",
+    "piping": "pipe_fitting",
+    "plumbing": "pipe_fitting",
+    "pipe_installation": "pipe_fitting",
+    "electrical_work": "electrical_maintenance",
+    "power_maintenance": "electrical_maintenance",
+    "electrical_repair": "electrical_maintenance"
+  }
 }
